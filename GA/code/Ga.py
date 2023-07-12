@@ -56,9 +56,11 @@ class Ga():
         child = []
         # lai 
         for i in range(self.n_pop):
-            if i in self.expulsion_set:continue
+            if i in self.expulsion_set:
+                continue
             for j in range(i, self.n_pop):
-                if j in self.expulsion_set:continue
+                if j in self.expulsion_set:
+                    continue
                 child_tmp, suc = self._laighep(i,j)
                 if suc:
                     child = child + child_tmp
@@ -136,26 +138,67 @@ class Ga():
             else:
                 del sol_init
 
-
-    def _laighep(self,sol1_id, sol2_id):
+    def _laighep(self, sol1_id, sol2_id):
         child = []
 
-        parent1_x = copy.deepcopy(self.pop[sol1_id].thesis_allocation)
-        parent1_y = copy.deepcopy(self.pop[sol1_id].teacher_allocation)
+        p1_x = self.pop[sol1_id].thesis_allocation
+        p2_x = self.pop[sol2_id].thesis_allocation
 
-        parent2_x = copy.deepcopy(self.pop[sol2_id].thesis_allocation)
-        parent2_y = copy.deepcopy(self.pop[sol2_id].teacher_allocation)
+        diff_x = []
 
-        # Chọn một điểm cắt ngẫu nhiên
-        crossover_point = random.randint(1, len(parent1_x)-1)
+        num_thesis = len(self.pop[sol1_id].thesis_allocation)
+        num_council = self.pop[sol1_id].num_council
+        for i in range(num_thesis):
+            if p1_x[i] != p2_x[i]:
+                diff_x.append(i)
+
+        if len(diff_x) == 0:
+            return [], False
         
-        # Lai ghép chuỗi gen từ cha mẹ
-        child1_x = parent1_x[:crossover_point] + parent2_x[crossover_point:]
-        child1_y = parent1_y[:crossover_point] + parent2_y[crossover_point:]
-        
-        child2_x = parent2_x[:crossover_point] + parent1_x[crossover_point:]
-        child2_y = parent2_y[:crossover_point] + parent1_y[crossover_point:]
+        num_mutate = min(max(int(num_council / num_council / 2),1), len(diff_x))
 
+        child1_x = copy.deepcopy(p1_x)
+        mutate_child1_x = random.sample(diff_x, num_mutate)
+
+        child2_x = copy.deepcopy(p2_x)
+        mutate_child2_x = random.sample(diff_x, num_mutate)
+
+        for thesis in mutate_child1_x:
+
+            child1_x[thesis] = p2_x[thesis]
+        
+        for thesis in mutate_child2_x:
+
+            child2_x[thesis] = p1_x[thesis]
+
+        p1_y = self.pop[sol1_id].teacher_allocation
+        p2_y = self.pop[sol2_id].teacher_allocation
+
+        diff_y = []
+
+        num_teacher = self.pop[sol1_id].num_teacher
+        for i in range(num_teacher):
+            if p1_y[i] != p2_y[i]:
+                diff_y.append(i)
+
+        child1_y = copy.deepcopy(p1_y)
+        child2_y = copy.deepcopy(p2_y)
+
+        if len(diff_y) != 0:
+            num_mutate = min(max(int(num_teacher / num_council / 2),1), len(diff_y))
+
+            mutate_child1_y = random.sample(diff_y, num_mutate)
+
+            mutate_child2_y = random.sample(diff_y, num_mutate)
+
+            for teacher in mutate_child1_y:
+
+                child1_y[teacher] = p2_y[teacher]
+            
+            for teacher in mutate_child2_y:
+
+                child2_y[teacher] = p1_y[teacher]
+        
         sol_child1 = copy.deepcopy(self.sol_sample)
         sol_child2 = copy.deepcopy(self.sol_sample)
 
@@ -174,6 +217,44 @@ class Ga():
             child.append(sol_child2)
         
         return child, (child != []) 
+
+    # def _laighep(self,sol1_id, sol2_id):
+    #     child = []
+
+    #     parent1_x = copy.deepcopy(self.pop[sol1_id].thesis_allocation)
+    #     parent1_y = copy.deepcopy(self.pop[sol1_id].teacher_allocation)
+
+    #     parent2_x = copy.deepcopy(self.pop[sol2_id].thesis_allocation)
+    #     parent2_y = copy.deepcopy(self.pop[sol2_id].teacher_allocation)
+
+    #     # Chọn một điểm cắt ngẫu nhiên
+    #     crossover_point = random.randint(1, len(parent1_x)-1)
+        
+    #     # Lai ghép chuỗi gen từ cha mẹ
+    #     child1_x = parent1_x[:crossover_point] + parent2_x[crossover_point:]
+    #     child1_y = parent1_y[:crossover_point] + parent2_y[crossover_point:]
+        
+    #     child2_x = parent2_x[:crossover_point] + parent1_x[crossover_point:]
+    #     child2_y = parent2_y[:crossover_point] + parent1_y[crossover_point:]
+
+    #     sol_child1 = copy.deepcopy(self.sol_sample)
+    #     sol_child2 = copy.deepcopy(self.sol_sample)
+
+    #     sol_child1.thesis_allocation = child1_x
+    #     sol_child1.teacher_allocation = child1_y
+    #     sol_child1.tinhk_xy()
+
+    #     if sol_child1.rang_buoc():
+    #         child.append(sol_child1)
+
+    #     sol_child2.thesis_allocation = child2_x
+    #     sol_child2.teacher_allocation = child2_y
+    #     sol_child2.tinhk_xy()
+
+    #     if sol_child2.rang_buoc():
+    #         child.append(sol_child2)
+        
+    #     return child, (child != []) 
     
     def _dotbien(self, sol_id):
 
